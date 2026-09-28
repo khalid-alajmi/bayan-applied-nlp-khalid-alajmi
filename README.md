@@ -170,50 +170,82 @@ Any course-provided material retained in this repository is attributed to its or
 
 ## Day 1 — Text Processing & Tokenisation
 
-Day 1 establishes the bilingual text-preparation pipeline used by Bayan. The implementation was executed end-to-end in Colab using synthetic Arabic and English examples.
+Day 1 establishes Bayan's bilingual text-preparation and Transformer foundation. The complete pipeline was executed end-to-end in Google Colab using synthetic Arabic and English examples.
 
 ### Implemented and Validated
 
-- Unicode inspection and NFC normalization.
-- Two-copy preprocessing contract preserving the raw input and producing protected model-ready text.
-- PII masking for synthetic email and phone examples before model processing.
-- Conservative Arabic normalization using NFC, whitespace normalization, and tatweel removal.
-- Sentence segmentation using a spaCy sentencizer, including an explicit abbreviation limitation probe.
-- Local WordPiece tokenization with token IDs and unknown-token inspection.
-- Token fertility and truncation measurement.
-- Padding and attention-mask construction.
-- Token ID to embedding conversion with validated tensor shapes.
-- Exploratory comparison with multilingual BERT (mBERT).
-- Distinction comparison between mBERT and XLM-R.
+- Inspected Unicode behavior and applied NFC normalization.
+- Implemented a two-copy preprocessing contract that preserves the original input while producing privacy-protected model text.
+- Masked synthetic email addresses and phone numbers before downstream processing.
+- Applied conservative Arabic normalization using NFC, whitespace normalization, and tatweel removal.
+- Implemented sentence segmentation with a spaCy sentencizer and documented the known abbreviation limitation.
+- Built and inspected a local WordPiece tokenization workflow with token IDs.
+- Measured token fertility and truncation behavior.
+- Constructed padded token batches and attention masks.
+- Converted token IDs into embeddings and validated tensor shapes.
+- Compared multilingual BERT (mBERT) and XLM-R tokenization behavior on bilingual examples.
+- Implemented scaled dot-product attention and verified attention probabilities.
+- Verified attention scaling and padding-mask behavior.
+- Traced multi-head attention tensor shapes from split heads through recombination.
+- Executed a Transformer encoder forward pass.
+- Verified numerical parity between the NumPy and PyTorch attention implementations.
+- Executed a real multilingual Transformer checkpoint and inspected hidden-state and attention tensor shapes.
 
 ### Measured Evidence
 
 | Evidence | Result |
 |---|---:|
-| Local mean token fertility | 1.44 |
-| Local truncation rate @10 | 20% |
+| Local mean token fertility | 1.36 |
+| Local truncation rate @10 | 0% |
 | Input IDs shape | (2, 12) |
 | Attention mask shape | (2, 12) |
 | Embeddings shape | (2, 12, 8) |
-| mBERT mean token fertility | 1.72 |
+| mBERT mean token fertility | 1.77 |
 | mBERT truncation rate @10 | 80% |
-| XLM-R mean token fertility | 1.43 |
+| mBERT observed tokenization time | 0.240 ms |
+| XLM-R mean token fertility | 1.50 |
 | XLM-R truncation rate @10 | 80% |
+| XLM-R observed tokenization time | 0.112 ms |
+| Multi-head encoder input | (2, 5, 12) |
+| Split-head representation | (2, 3, 5, 4) |
+| Recombined representation | (2, 5, 12) |
+| Transformer encoder output | (2, 5, 12) |
+| NumPy/PyTorch attention difference | 0.000e+00 |
+| Real checkpoint hidden states | (2, 10, 768) |
+| Real checkpoint attention | (2, 12, 10, 10) |
 
-Tokenization timing was also measured during the executed comparison; because the evaluation set is intentionally small, timing is treated as observational evidence rather than a general performance claim.
+Tokenization timing is reported only as observational evidence from this small executed sample and is not treated as a general performance benchmark.
 
-### Engineering Decision
+### Engineering Decisions
 
-The project uses conservative normalization by default to preserve Arabic linguistic information while applying only necessary preprocessing and privacy protection. Aggressive normalization is not used by default because it may remove useful linguistic distinctions.
+Bayan uses conservative normalization by default: NFC normalization, whitespace normalization, tatweel removal, and privacy masking. Aggressive Arabic normalization is not used by default because it may remove linguistic information that could be useful to downstream tasks.
 
-Tokenizer metrics are treated as diagnostic evidence rather than proof that one multilingual tokenizer is universally superior to another.
+Tokenizer fertility, truncation, and timing are treated as diagnostic evidence. They support inspection of tokenizer behavior on the bilingual sample but do not establish that one multilingual tokenizer is universally superior.
+
+For attention masking, valid encoder positions are allowed to participate while padding positions are blocked before softmax. The implementation explicitly verifies that masked positions receive zero attention weight and that valid attention rows sum to one.
+
+Attention weights are used as an implementation-inspection tool and are not treated as proof that a token caused a model decision.
+
+### Known Limitation
+
+The rule-based sentence segmentation baseline requires stronger abbreviation handling before production use. The privacy masking implemented during Day 1 is also a teaching-level mechanism rather than a production-grade PII detection system.
 
 ### Verification
 
-The executed Day 1 notebook completed all core, Explore, and Distinction checks successfully, including:
+The complete Day 1 execution produced the following validation evidence:
 
+`DAY1_RUNTIME=READY`  
 `DAY1_NOTEBOOK1_CORE=PASS`  
 `EXPLORE_TOKENIZER_COMPARISON=PASS`  
-`DISTINCTION_TOKENIZER_COMPARISON=PASS`
+`DISTINCTION_TOKENIZER_COMPARISON=PASS`  
+`DAY1_NOTEBOOK2_CORE=PASS`  
+`TRANSFORMER_ENCODER_FORWARD=PASS`  
+`ATTENTION_PARITY=PASS`  
+`ACTUAL_TRANSFORMER_FORWARD=PASS`  
+`DAY1_GATE_A_TECHNICAL_EVIDENCE=PASS`  
+`DAY1_PIPELINE_EXECUTION=COMPLETE`
 
-Notebook: `notebooks/01_text_processing_tokenization.ipynb`
+### Day 1 Notebooks
+
+- `notebooks/01_text_processing_tokenization.ipynb`
+- `notebooks/02_attention_transformers.ipynb`
