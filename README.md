@@ -166,3 +166,54 @@ This repository contains my implementation, experiments, engineering decisions, 
 Course materials, instructional notebooks, and the original Bayan learning framework were prepared and delivered by **Meaad Al-Marri** as part of **SDAIA Academy**.
 
 Any course-provided material retained in this repository is attributed to its original source. My project-specific results and performance claims are reported only when produced through my own executed and validated workflow.
+---
+
+## Day 1 — Text Processing & Tokenisation
+
+Day 1 establishes the bilingual text-preparation pipeline used by Bayan. The implementation was executed end-to-end in Colab using synthetic Arabic and English examples.
+
+### Implemented and Validated
+
+- Unicode inspection and NFC normalization.
+- Two-copy preprocessing contract preserving the raw input and producing protected model-ready text.
+- PII masking for synthetic email and phone examples before model processing.
+- Conservative Arabic normalization using NFC, whitespace normalization, and tatweel removal.
+- Sentence segmentation using a spaCy sentencizer, including an explicit abbreviation limitation probe.
+- Local WordPiece tokenization with token IDs and unknown-token inspection.
+- Token fertility and truncation measurement.
+- Padding and attention-mask construction.
+- Token ID to embedding conversion with validated tensor shapes.
+- Exploratory comparison with multilingual BERT (mBERT).
+- Distinction comparison between mBERT and XLM-R.
+
+### Measured Evidence
+
+| Evidence | Result |
+|---|---:|
+| Local mean token fertility | 1.44 |
+| Local truncation rate @10 | 20% |
+| Input IDs shape | (2, 12) |
+| Attention mask shape | (2, 12) |
+| Embeddings shape | (2, 12, 8) |
+| mBERT mean token fertility | 1.72 |
+| mBERT truncation rate @10 | 80% |
+| XLM-R mean token fertility | 1.43 |
+| XLM-R truncation rate @10 | 80% |
+
+Tokenization timing was also measured during the executed comparison; because the evaluation set is intentionally small, timing is treated as observational evidence rather than a general performance claim.
+
+### Engineering Decision
+
+The project uses conservative normalization by default to preserve Arabic linguistic information while applying only necessary preprocessing and privacy protection. Aggressive normalization is not used by default because it may remove useful linguistic distinctions.
+
+Tokenizer metrics are treated as diagnostic evidence rather than proof that one multilingual tokenizer is universally superior to another.
+
+### Verification
+
+The executed Day 1 notebook completed all core, Explore, and Distinction checks successfully, including:
+
+`DAY1_NOTEBOOK1_CORE=PASS`  
+`EXPLORE_TOKENIZER_COMPARISON=PASS`  
+`DISTINCTION_TOKENIZER_COMPARISON=PASS`
+
+Notebook: `notebooks/01_text_processing_tokenization.ipynb`
